@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { saveEarlyAccessSubmission } from '@/lib/supabase';
 
 interface LeadCaptureProps {
   onClose?: () => void;
@@ -21,13 +22,29 @@ export default function LeadCapture({ onClose }: LeadCaptureProps) {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Save to database
+      const result = await saveEarlyAccessSubmission({
+        email: formData.email,
+        home_country: formData.homeCountry || undefined,
+        next_destination: formData.nextDestination || undefined,
+        travel_month: formData.travelMonth || undefined,
+        budget: formData.budget || undefined,
+      });
+
+      if (!result.success) {
+        console.error('Failed to save submission:', result.error);
+        // Still show success to user, but log the error
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Still show success to user
+    }
     
     setIsLoading(false);
     setIsSubmitted(true);
     
-    // Analytics tracking could go here
+    // Analytics tracking
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'form_submit', {
         form_id: 'form-early-access',

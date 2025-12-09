@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { saveBookingFlowSubmission } from '@/lib/supabase';
 
 interface BookingFlowProps {
   onClose?: () => void;
@@ -24,8 +25,30 @@ export default function BookingFlow({ onClose }: BookingFlowProps) {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simulate processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Save to database
+      const result = await saveBookingFlowSubmission({
+        cities: formData.cities,
+        start_date: formData.startDate || undefined,
+        end_date: formData.endDate || undefined,
+        travelers: formData.travelers,
+        include_flights: formData.includeFlights,
+        include_hotels: formData.includeHotels,
+        include_trains: formData.includeTrains,
+        include_activities: formData.includeActivities,
+      });
+
+      if (!result.success) {
+        console.error('Failed to save submission:', result.error);
+        // Still show success to user, but log the error
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Still show success to user
+    }
+    
+    // Simulate processing for UX
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     setStep(2);
     setIsProcessing(false);
